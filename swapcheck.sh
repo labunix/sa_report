@@ -6,6 +6,7 @@ if [ "$#" -ne 0 ];then
     # Test Used / Total * 100 % threshold
     SWAPLIMIT=-1
     MEMLIMIT=0
+    break
     ;;
 -s:*|SWAPLIMIT=*)
     SWAPLIMIT=`echo $1 | sed s/"="/":"/ | awk -F\: '{print $2}'`
