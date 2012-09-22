@@ -9,11 +9,11 @@ if [ "$#" -ne 0 ];then
     break
     ;;
 -s:*|SWAPLIMIT=*)
-    SWAPLIMIT=`echo $1 | sed s/"="/":"/ | awk -F\: '{print $2}'`
+    SWAPLIMIT=`echo $1 | sed s/"="/":"/ | awk -F\: '{print $2%100}'`
     shift;
     ;;
 -m:*|MEMLIMIT=*)
-    MEMLIMIT=`echo $1  | sed s/"="/":"/ | awk -F\: '{print $2}'`
+    MEMLIMIT=`echo $1  | sed s/"="/":"/ | awk -F\: '{print $2%100}'`
     shift;
     ;;
 -h|--help|*)
