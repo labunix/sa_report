@@ -46,5 +46,7 @@ free | grep ^Swap | \
 free | grep ^Mem  | \
   awk '{if (($3/$2*100)>'"${MEMLIMIT}"') print "Limit Check "($3/$2*100)}'
 
+unset SWAPLIMIT MEMLIMIT list
+exit 0
 
 
