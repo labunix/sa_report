@@ -39,12 +39,12 @@ fi
 if [ "x$SWAPLIMIT" == "x" ];then
   SWAPLIMIT=0
 fi
-
+MYDATE=`env LANG=C date '+%Y/%m/%d,%H:%M:%S'`
 # Swap Over 0%,Memory Over 70%
 free | grep ^Swap | \
-  awk '{if (($3/$2*100)>'"${SWAPLIMIT}"') print "Swap Used " ($3/$2*100)"%"}'
+  awk '{if (($3/$2*100)>'"${SWAPLIMIT}"') print "'"$MYDATE"',Swap Used:" ($3/$2*100)"%"}'
 free | grep ^Mem  | \
-  awk '{if (($3/$2*100)>'"${MEMLIMIT}"') print "Limit Check "($3/$2*100)}'
+  awk '{if (($3/$2*100)>'"${MEMLIMIT}"') print "'"$MYDATE"',Mem Used :"($3/$2*100)"%"}'
 
 unset SWAPLIMIT MEMLIMIT list
 exit 0
