@@ -16,7 +16,8 @@ echo "$PATH" | sed s/"\:"/"\n"/g | grep '^/usr/sbin' > /dev/null 2>&1 || \
 echo "$PATH" | sed s/"\:"/"\n"/g | grep '^/sbin'     > /dev/null 2>&1 || \
   export PATH=/sbin:$PATH
 
-cd $(dirname $0);pwd
+cd $(dirname $0)
+# pwd
 FLAG=1
 TEST=""
 
@@ -49,7 +50,8 @@ chmod +x cache_clear.sh
 exec > "$LOGFILE" 2>&1
 ./swapcheck.sh "$TEST" | grep Swap && ./cache_clear.sh && FLAG=0
 if [ "$FLAG" -eq "0" ] ;then
-  ./swapcheck.sh "$TEST" | grep Mem || swapon -s && swapoff -a && swapon -a
+  swapon -s
+  ./swapcheck.sh "$TEST" | grep Mem || swapoff -a && swapon -a
 fi
 if [ -s "$LOGFILE" ];then
   cat "$LOGFILE" | \
