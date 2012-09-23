@@ -48,10 +48,11 @@ chmod +x swapcheck.sh
 chmod +x cache_clear.sh
 
 exec > "$LOGFILE" 2>&1
-./swapcheck.sh "$TEST" | grep Swap && ./cache_clear.sh && FLAG=0
+./swapcheck.sh $TEST | grep Swap && ./cache_clear.sh && FLAG=0
 if [ "$FLAG" -eq "0" ] ;then
+  echo "[Swap Statistics]"
   swapon -s
-  ./swapcheck.sh "$TEST" | grep Mem || swapoff -a && swapon -a
+  ./swapcheck.sh $TEST | grep Mem || swapoff -a && swapon -a
 fi
 if [ -s "$LOGFILE" ];then
   cat "$LOGFILE" | \
