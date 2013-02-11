@@ -1,66 +1,70 @@
 #!/bin/bash
 set -e
 
+# root check
 if [ "`id -u`" -ne "0" ];then
   echo "Sorry,NotPermit User"
   exit 1
 fi
 
+# include /sbin,/usr/sbin PATH
 if [ "x${PATH}" == "x" ];then
   echo "PATH Error, PATH=$PATH"
   exit 2
 fi
 
-echo "$PATH" | sed s/"\:"/"\n"/g | grep '^/usr/sbin' > /dev/null 2>&1 || \
+echo "$PATH" | sed s/"\:"/"\n"/g | \
+  grep '^/usr/sbin' > /dev/null 2>&1 || \
   export PATH=/usr/sbin:$PATH
-echo "$PATH" | sed s/"\:"/"\n"/g | grep '^/sbin'     > /dev/null 2>&1 || \
+echo "$PATH" | sed s/"\:"/"\n"/g | \
+  grep '^/sbin'     > /dev/null 2>&1 || \
   export PATH=/sbin:$PATH
 
 cd $(dirname $0)
-# pwd
-FLAG=1
-TEST=""
 
-if [ "$#" -eq 1 ];then
-  case $1 in
+case $1 in
 -t|test)
-  TEST=test
+  SWAPLIMIT=0
+  MEMLIMIT=100
   ;;
 *)
-  echo "Do Nothing" > /dev/null
+  SWAPLIMIT=1
+  MEMLIMIT=70
+  echo "# Usage $0 [-t|test]"
+  echo "# Default:"
+  echo "#   SWAPUSED>0 && MEMUSED<70; -> clear cache and reset swap."
+  echo "# -t|test"
+  echo "# force clear, cache and reset swap"
+  echo ""
   ;;
-  esac
-fi
+esac
 
-LOGFILE=autoclear.log
+MYDATE=`env LANG=C date '+%Y/%m/%d,%H:%M:%S'`
+SWAPUSED=`free | grep ^Swap | awk '{printf "%d\n",($3/$2*100)}'`
+MEMUSED=`free | grep ^Mem  | awk '{printf "%d\n",($3/$2*100)}'`
 
-test -f "$LOGFILE" || touch "$LOGFILE"
-test -f swapcheck.sh || \
-  wget https://raw.github.com/labunix/sa_report/master/swapcheck.sh
-test -f cache_clear.sh || \
-  wget https://raw.github.com/labunix/sa_report/master/cache_clear.sh
+function kernel_mem_clear() {
+    echo "[Before]"
+    echo "$MYDATE,MEMUSED=${MEMUSED}%,SWAPUSED=${SWAPUSED}%"
+    free
+    sync;sync;sync
+    sleep 1 && sysctl -w vm.drop_caches=3
+    sync;sync;sync
+    sleep 1 && swapoff -a && swapon -a
+    echo "[After]"
+    SWAPUSED=`free | grep ^Swap | awk '{printf "%d\n",$3/$2*100}'`
+    MEMUSED=`free | grep ^Mem  | awk '{printf "%d\n",$3/$2*100}'`
+    echo "$MYDATE,MEMUSED=${MEMUSED}%,SWAPUSED=${SWAPUSED}%"
+    free
+}
 
-test -f "$LOGFILE" || exit 1
-test -f swapcheck.sh || exit 1
-test -f cache_clear.sh || exit 1
-
-chmod +x swapcheck.sh
-chmod +x cache_clear.sh
-
-exec > "$LOGFILE" 2>&1
-./swapcheck.sh $TEST | grep Swap && ./cache_clear.sh && FLAG=0
-if [ "$FLAG" -eq "0" ] ;then
-  echo "[Swap Statistics]"
-  swapon -s
-  ./swapcheck.sh $TEST | grep Mem || swapoff -a && swapon -a
-fi
-if [ -s "$LOGFILE" ];then
-  cat "$LOGFILE" | \
-  mail -s "cache_clear Report" root && \
-  rm "$LOGFILE"
+if [ "$SWAPUSED" -ge "$SWAPLIMIT" ];then
+  if [ "$MEMUSED" -le "$MEMLIMIT" ];then
+    kernel_mem_clear
+  fi
 else
-  rm "$LOGFILE"
+  echo "$MYDATE,MEMUSED=${MEMUSED}%,SWAPUSED=${SWAPUSED}%"
 fi
+unset SWAPUSED MEMUSED SWAPLIMIT MEMLIMIT MYDATE PATH
 
-unset PATH LOGFILE FLAG
 exit 0
