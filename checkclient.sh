@@ -50,7 +50,7 @@ if [ -f CPU.tmp ];then
       join -t, JOIN1.tmp DISK.tmp | sed s%^%"$MYDAYS,"%g | \
       sed s/"\:[0-9][0-9],"/","/g > JOIN2.tmp
       echo "date,Time,CPU,MEM,Disk" | \
-      cat - JOIN2.tmp > `hostname -s`_Perf_$LOGDAY.log
+      cat - JOIN2.tmp > `hostname -s`_Perf_$LOGDAY.csv
       rm -f JOIN[12].tmp DISK.tmp MEM.tmp CPU.tmp
     fi
   fi
